@@ -1,0 +1,8 @@
+In Go, can a single line of input be read from stdin in a simple way, which also meets the following requirements?
+
+    can be called by disparate parts of a larger interactive application without having to create coupling between these different parts of the application (e.g. by passing a global bufio.Scanner between them)
+    works whether users are running an interactive terminal or using pre-scripted input
+
+I'd like to modify an existing large Go application which currently creates a bufio.Scanner instance every time it asks users for a line of input. Multiple instances work fine when standard input is from a terminal, but when standard input is piped from another process, calls to Scan only succeed on the first instance of bufio.Scanner. Calls from all other instances fail.
+
+Here's some toy code that demonstrates the problem:
