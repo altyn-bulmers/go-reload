@@ -1,4 +1,4 @@
-package piscine
+package main
 
 func Split(str, charset string) []string {
 	strAsRune := []rune(str)

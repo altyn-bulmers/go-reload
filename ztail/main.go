@@ -3,240 +3,214 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/01-edu/z01"
 )
 
 func main() {
-
-	counter := 0
-
-	var result []byte
-
-	number, files, rev := numbers(os.Args[1:])
-
-	for _, f := range files {
-		if !rev {
-			file, err := os.Open(f)
-			if err != nil {
-				fmt.Printf("tail: cannot open '%s' for reading: No such file or directory\n", f)
-				// if ind == ArrLen(files) - 1 {
-				// 	fmt.Printf("\n")
-				// }
-				//os.Exit(0)
-			} else {
-				if ArrLen(files) > 1 {
-					if counter == 0 {
-						fmt.Printf("==> %s <==\n", f)
-						counter++
-
-					} else {
-						fmt.Printf("\n==> %s <==\n", f)
+	args := os.Args
+	flagC := "-c"
+	var c uint64
+	var pm bool
+	foundFlag := false
+	mainpm := false
+	err := ""
+	arr1 := []string{}
+	errMess := "tail: option requires an argument -- 'c'"
+	errMess2 := "Try 'tail --help' for more information."
+	errMess3 := "tail: option used in invalid context -- "
+	errMess4 := "tail: invalid option -- ’"
+	errMess5 := "tail: option '---' is ambiguous; possibilities: '---disable-inotify' '---presume-input-pipe'"
+	errMess6 := "tail: unrecognized option '"
+	if lenArrStr(args) == 1 {
+		return
+	}
+	for i := 1; i < lenArrStr(args); {
+		if args[i][0] == '-' {
+			if args[i] == flagC {
+				if i == lenArrStr(args)-1 {
+					fmt.Printf("%s", errMess)
+					z01.PrintRune(10)
+					fmt.Printf("%s", errMess2)
+					z01.PrintRune(10)
+					return
+				} else {
+					foundFlag = true
+					c, pm, err = atoiUint(args[i+1])
+					if err != "" {
+						printStrZ01(err)
+						z01.PrintRune(10)
+						return
+					} else if pm {
+						mainpm = true
 					}
+					i = i + 2
 				}
-
-				stat, err := file.Stat()
-				if err != nil {
-					fmt.Printf(err.Error())
-					os.Exit(0)
+			} else if args[i][1] == 'c' {
+				foundFlag = true
+				c, pm, err = atoiUint(args[i][2:])
+				if err != "" {
+					printStrZ01(err)
+					z01.PrintRune(10)
+					return
+				} else if pm {
+					mainpm = true
 				}
-				size := stat.Size()
-				sizeInt := int(size)
-				if number > sizeInt {
-					number = sizeInt
-				}
-				for i := 0; i < sizeInt; i++ {
-					result = append(result, 0)
-				}
-				file.Read(result)
-				fmt.Printf("%v", string(result[sizeInt-number:]))
-			}
-
-		} else {
-			file, err := os.Open(f)
-			if err != nil {
-				fmt.Printf("tail: cannot open '%s' for reading: No such file or directory\n", f)
-				// if ind == ArrLen(files) - 1 {
-				// 	fmt.Printf("\n")
-				// }
-				//os.Exit(0)
-			} else {
-				if ArrLen(files) > 1 {
-					if counter == 0 {
-						fmt.Printf("==> %s <==\n", f)
-						counter++
-
-					} else {
-						fmt.Printf("\n==> %s <==\n", f)
+				i++
+			} else if args[i][1] != 'c' {
+				if args[i][1] == '-' {
+					if lenString(args[i]) == 2 {
+						args = args[i+1:]
+						for k := range args {
+							arr1 = append(arr1, args[k])
+						}
+						break
+					} else if args[i][2] == '-' {
+						if lenString(args[i]) == 3 {
+							fmt.Printf("%s", errMess5)
+							z01.PrintRune(10)
+							fmt.Printf("%s", errMess2)
+							z01.PrintRune(10)
+							return
+						}
+						fmt.Printf("%s%s’", errMess6, args[i])
+						z01.PrintRune(10)
+						fmt.Printf("%s", errMess2)
+						z01.PrintRune(10)
+						return
 					}
-				}
-
-				stat, err := file.Stat()
-				if err != nil {
-					fmt.Printf(err.Error())
-					os.Exit(0)
-				}
-				size := stat.Size()
-				sizeInt := int(size)
-				if number > sizeInt {
+				} else if args[i][1] >= '0' && args[i][1] <= '9' {
+					fmt.Printf("%s", errMess3)
+					z01.PrintRune(rune(args[i][1]))
+					z01.PrintRune(10)
+					return
+				} else {
+					fmt.Printf("%s%v’", errMess4, string(args[i][1]))
+					z01.PrintRune(10)
+					fmt.Printf("%s", errMess2)
+					z01.PrintRune(10)
 					return
 				}
-				for i := 0; i < sizeInt; i++ {
-					result = append(result, 0)
-				}
-				file.Read(result)
-				fmt.Printf("%v", string(result[number-1:]))
+
 			}
-
+		} else {
+			arr1 = append(arr1, args[i])
+			i++
 		}
-
 	}
-	//
-	//fmt.Printf(rev)
-
-}
-
-func Atoi(s string) (int, bool) {
-
-	// s0 := s
-	var res int
-	counts := 0
-	for range s {
-		counts++
-	}
-
-	if counts >= 1 && counts <= 20 {
-		if s[0] == '-' || s[0] == '+' {
-			s = s[1:]
+	if foundFlag {
+		for i := range arr1 {
+			printArr(arr1[i], mainpm, c, lenArrStr(arr1), i)
 		}
 	} else {
-		return 1, false
+		fmt.Printf("no flag '-c'")
+		z01.PrintRune(10)
 	}
 
-	for _, v := range s {
-		if v >= 48 && v <= 57 {
-			res = int(v-48) + res*10
-		} else {
-			return 0, false
+}
+
+func printArr(s string, pm bool, c uint64, len int, index int) {
+	file, err := os.Open(s)
+	if err != nil {
+		fmt.Printf("tail: cannot open '%s' for reading: No such file or directory", s)
+		z01.PrintRune(10)
+		return
+	}
+	if len > 1 {
+		if index != 0 {
+			z01.PrintRune(10)
+		}
+		fmt.Printf("==> %s <==", s)
+		z01.PrintRune(10)
+	}
+	f, _ := file.Stat()
+	size := int64(f.Size())
+	arr2 := []byte{}
+	var i int64
+	for i = 0; i < size; i++ {
+		arr2 = append(arr2, 0)
+	}
+	file.Read(arr2)
+	if pm {
+		c--
+		fmt.Printf("%s", string(arr2[c:]))
+	} else {
+		fmt.Printf("%v", string(arr2[lenArrByte(arr2)-c:]))
+	}
+
+}
+
+func lenArrByte(arr []byte) uint64 {
+	var l uint64
+	l = 0
+	for range arr {
+		l++
+	}
+	return l
+}
+func lenArrStr(arr []string) int {
+	l := 0
+	for range arr {
+		t := l
+		l++
+		if t > l {
+			return l - 1
+		}
+	}
+	return l
+}
+func lenString(s string) int {
+	l := 0
+	for range s {
+		t := l
+		l++
+		if t > l {
+			return l - 1
+		}
+	}
+	return l
+}
+func atoiUint(s string) (uint64, bool, string) {
+	error := "tail: invalid number of bytes: '" + s + "'"
+	var nbr uint64
+	bool := false
+	len := 0
+	for range s {
+		len++
+		if len > 2 {
+			break
 		}
 	}
 
-	if res < 0 {
-		return 1, false
-	}
-	// if s0[0] == '-' {
-	// 	res = -res
-	// }
-	// if s[0] == '+' {
-	// 	return res, true
-	// }
-
-	return res, true
-}
-
-func ArrLen(arr []string) int {
-	count := 0
-	for range arr {
-		count++
-	}
-	return count
-}
-
-func strLen(arr string) int {
-	count := 0
-	for range arr {
-		count++
-	}
-	return count
-}
-
-func numbers(args []string) (int, []string, bool) {
-
-	cNum := 0
-	//arg := os.Args[1:]
-	ArgLength := 0
-	var files []string
-	//var result []byte
-	flag := false
-
-	for range args {
-		ArgLength++
-	}
-
-	for index, ArgRange := range args {
-		// var err bool
-		// _, err = Atoi(ArgRange)
-		// for _, i := range ArgRange {
-		// 	if i == '+' {
-		// 		flag = true
-		// 	}
-		// }
-		if strLen(ArgRange) >= 2 && ArgRange[:2] == "-c" {
-			if strLen(ArgRange) == 2 && index != ArgLength-1 {
-				varNum, err := Atoi(args[index+1])
-
-				for _, i := range ArgRange {
-					if i == '+' {
-						flag = true
-					}
-				}
-
-				if varNum == 1 && err == false {
-					fmt.Printf("tail: invalid number of bytes: ‘%s‘: Value too large for defined data type\n", args[index+1])
-					os.Exit(1)
-				}
-				if varNum == 0 && err == false {
-					fmt.Printf("tail: invalid number of bytes: ‘%s’\n", args[index+1])
-					os.Exit(1)
-				} else {
-					cNum = varNum
-					//flag = err
-				}
-			} else if strLen(ArgRange) > 2 {
-				varNum, err := Atoi(ArgRange[2:])
-				for _, i := range ArgRange {
-					if i == '+' {
-						flag = true
-					}
-				}
-
-				if varNum == 1 && err == false {
-					fmt.Printf("tail: invalid number of bytes: ‘%s‘: Value too large for defined data type\n", ArgRange[2:])
-					os.Exit(1)
-				}
-				if varNum == 0 && err == false {
-					fmt.Printf("tail: invalid number of bytes: ‘%s’\n", ArgRange[2:])
-					os.Exit(1)
-				} else {
-					cNum = varNum
-					for _, i := range ArgRange {
-						if i == '+' {
-							flag = true
-						}
-					}
-					//flag = err
-				}
-			} else {
-				fmt.Printf("tail: option requires an argument -- 'c'\n")
-				fmt.Printf("Try 'tail --help' for more information.\n")
-				os.Exit(0)
+	for i := range s {
+		if (s[i] == '+' && len == 1) || (s[i] == '-' && len == 1) {
+			return 0, false, error
+		} else if (s[i] == '+' && i != 0) || (s[i] == '-' && i != 0) {
+			return 0, false, error
+		} else if s[i] == '+' && i == 0 {
+			bool = true
+		} else if s[i] == '-' && i == 0 {
+			continue
+		} else if s[i] >= '0' && s[i] <= '9' {
+			var temp uint64
+			for j := '0'; j < rune(s[i]); j++ {
+				temp++
 			}
-			// if index >= ArgLength-1 {
-			// 	fmt.Printf("tail: option requires an argument -- 'c'\n")
-			// 	fmt.Printf("Try 'tail --help' for more information.\n")
-			// 	os.Exit(0)
-			// }
-
+			temp2 := nbr
+			nbr = nbr*10 + temp
+			if nbr < temp2 {
+				error = error + ": Value too large for defined data type"
+				return 0, false, error
+			}
 		} else {
-			varNum, err := Atoi(ArgRange)
-			for _, i := range ArgRange {
-				if i == '+' {
-					flag = true
-				}
-			}
-			if ArgRange != "-c" && varNum == 0 && err == false {
-				files = append(files, ArgRange)
-			}
+			return 0, false, error
 		}
-		// return cNum, files, flag
 	}
-	return cNum, files, flag
+	error = ""
+	return nbr, bool, error
+}
+func printStrZ01(s string) {
+	for i := range s {
+		z01.PrintRune(rune(s[i]))
+	}
 }
