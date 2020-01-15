@@ -1,0 +1,18 @@
+Action
+Adventure
+Fighting Games
+First-Person Shooters
+Flight/Flying
+Party
+Platformer
+Puzzle
+Racing
+Real-Time Strategy
+Role-Playing
+Simulation
+Sports
+Strategy
+Third-Person Shooter
+Turn-Based Strategy
+Wargames
+Wrestling
